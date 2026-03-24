@@ -36,16 +36,6 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className={`${inter.variable} ${barlow.variable} ${instrumentSerif.variable} h-full antialiased`} suppressHydrationWarning>
         <body className="min-h-full flex flex-col font-sans bg-white text-black" suppressHydrationWarning>
-          <header className="fixed top-6 right-6 z-[100] flex items-center gap-4">
-            <Show when="signed-out">
-              <SignInButton mode="modal">
-                <button className="bg-black text-white px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest hover:scale-105 transition-all">Sign In</button>
-              </SignInButton>
-            </Show>
-            <Show when="signed-in">
-              <UserButton afterSignOutUrl="/" />
-            </Show>
-          </header>
           {children}
         </body>
       </html>
