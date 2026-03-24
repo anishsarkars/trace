@@ -483,99 +483,96 @@ export async function POST(req: Request) {
       OUTPUT STRUCTURE (MANDATORY):
       ---
       PROJECT SETUP
-      * Framework (React + Next.js App Router)
-      * Styling system (Tailwind CSS)
-      * Fonts (import links if needed)
-      * Dependencies (Framer Motion, Lucide Icons, etc.)
+      * Framework: React + Next.js App Router
+      * Styling system: Tailwind CSS
+      * Fonts: [Primary font + Fallback + Import links]
+      * Dependencies: [Framer Motion, Lucide Icons, etc.]
 
       ---
       DESIGN SYSTEM
-      Define:
       * CSS variables (:root)
-      * color tokens (background, foreground, accent, muted)
-      * font system (display + body)
-      * spacing scale
-      * border radius
-      * shadows
+        - [Listing all extracted hex colors]
+      * Color tokens:
+        - [Background, Foreground, Accent, Muted mapped to variables]
+      * Font system:
+        - Display: [Family, weight, sizes per breakpoint]
+        - Body: [Family, weight, sizes per breakpoint]
+      * Spacing scale: [xs to xl in px]
+      * Border radius: [sm to lg in px]
+      * Shadows: [sm to md with rgba]
 
       ---
       LAYOUT SYSTEM
-      * Page layout (h-screen, flex, grid)
-      * overflow rules
-      * container widths
+      * Page layout: [e.g., h-screen flex flex-col]
+      * Overflow rules: [e.g., overflow-y-auto]
+      * Container widths: [Mobile, Tablet, Desktop %]
 
       ---
       NAVIGATION
-      * layout (flex, spacing)
-      * logo
-      * nav items
-      * CTA button
+      * Layout: [flex, justify, items, height, padding]
+      * Logo: [Description + size]
+      * Nav items: [List + layout + spacing]
+      * CTA button: [Detailed Tailwind styling]
 
       ---
-      HERO SECTION
-      * structure (centered / split / video background)
-      * headline (exact typography)
-      * subtext
-      * CTA buttons
-      * spacing
+      HERO SECTION (IF PRESENT)
+      * Structure: [centered / split / video background]
+      * Headline: [Exact typography]
+      * Subtext: [Exact typography]
+      * CTA buttons: [Detailed Tailwind styling]
+      * Spacing: [padding/margin]
 
       ---
       MEDIA / BACKGROUND
-      * video or image usage
-      * positioning (absolute, object-cover)
-      * layering (z-index)
+      * Strategy: [video or image usage]
+      * Positioning: [absolute, object-fit]
+      * Layering: [z-index]
 
       ---
       ANIMATIONS (IF PRESENT)
-      * use Framer Motion
-      * define:
-        * initial state
-        * animate state
-        * duration
-        * delay
+      * Framework: Framer Motion
+      * Definitions: [Initial, Animate, Duration, Delay] (e.g., for hover states)
 
       ---
       MAIN CONTENT (CRITICAL)
       If grid detected:
-      * define grid system:
-        * columns
-        * gap
-      * define card structure:
-        * thumbnail
-        * title
-        * metadata
+      * Grid system:
+        - Columns: [counts for mobile, tablet, desktop]
+        - Gap: [Tailwind gap class]
+      * Card structure:
+        - Thumbnail: [Tailwind sizing + fit + radius]
+        - Title: [Tailwind text style]
+        - Metadata: [Tailwind text style]
 
       ---
       ADVANCED COMPONENTS (IF PRESENT)
-      * dashboard
-      * tables
-      * charts
-      * sidebar
-      Define internal layout clearly.
+      * Sidebar / Dashboard / Tables / Charts:
+        - Internal layout clearly defined.
+        - Items/Rows styling.
 
       ---
       INTERACTIONS
-      * hover states
-      * button behavior
-      * transitions
+      * Hover states: [Bg changes, scale effects]
+      * Button behavior: [active:scale, ripples]
+      * Transitions: [e.g., transition-all duration-200]
 
       ---
       RESPONSIVENESS
-      * mobile
-      * tablet
-      * desktop
+      * Mobile: [Breakpoint + Adjustments like hiding sidebar]
+      * Tablet: [Breakpoint + Adjustments like partial layout]
+      * Desktop: [Breakpoint + Full layout specs]
 
       ---
       FINAL RULES:
-      * Use exact values from schema
+      * Use EXACT values from schema
       * Do NOT invent missing features
       * If data is missing → skip, do not fabricate
       * Maintain clarity and hierarchy
+      * Return ONLY the spec text.
 
       ---
       GOAL:
-      Produce a **high-end, production-ready UI build spec** that can be directly used to generate UI in Cursor/Claude.
-      Return ONLY the spec text.
+      Produce a **high-end, production-ready UI build spec** that matches the input site with 95%+ accuracy.
     `;
 
     let finalUIBuildSpec: string = "";
