@@ -110,21 +110,52 @@ export async function POST(req: Request) {
     let fullCSS: string[] = [];
     let apiData: any[] = [];
 
-    // STEP 1: MULTI-SOURCE CRAWL (Firecrawl for markdown/screenshot, Playwright for measurements)
-    if (firecrawl) {
-      console.log("[Trace Agent] Stage 1a: High-Fidelity Capture (Firecrawl)...");
+    // 🔥 1a. High-Fidelity Capture (Firecrawl v2 API)
+    if (process.env.FIRECRAWL_API_KEY) {
+      console.log("[Trace Agent] Stage 1a: High-Fidelity Capture (Firecrawl v2)...");
       try {
-        const scrapeResult = await (firecrawl as any).scrapeUrl(targetUrl, {
-          formats: ["markdown", "screenshot", "html"],
-          waitFor: 1000,
+        const firecrawlResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            "url": targetUrl,
+            "onlyMainContent": false,
+            "maxAge": 172800000,
+            "formats": [
+              "markdown",
+              "summary",
+              "links",
+              "html",
+              "screenshot@fullPage",
+              {
+                "type": "json",
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "company_name": { "type": "string" },
+                    "company_description": { "type": "string" }
+                  }
+                }
+              },
+              "branding",
+              "images"
+            ]
+          })
         });
-        if (scrapeResult) {
-          markdownContent = scrapeResult.markdown || "";
-          screenshotBase64 = scrapeResult.screenshot || "";
-          htmlContent = scrapeResult.html || "";
+
+        const scrapeResult = await firecrawlResponse.json();
+        if (scrapeResult.success && scrapeResult.data) {
+          const d = scrapeResult.data;
+          markdownContent = d.markdown || "";
+          screenshotBase64 = d.screenshot || "";
+          htmlContent = d.html || "";
+          // We can also use d.summary, d.branding, d.links, etc. in future stages
         }
       } catch (fErr: any) {
-        console.warn("[Firecrawl Warn]: " + (fErr.message || "Unknown error"));
+        console.warn("[Firecrawl v2 Warn]: " + (fErr.message || "Unknown error"));
       }
     }
 
