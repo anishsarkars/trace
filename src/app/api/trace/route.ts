@@ -471,139 +471,107 @@ export async function POST(req: Request) {
       refinedJSON = structuredJSON;
     }
 
-    // ⚡ STEP 5 — TRACE DESIGN COMPILER
-    console.log("[Trace Agent] Stage 5: Compiling High-End UI Build Specification...");
+    // ⚡ STEP 5 — TRACE DESIGN COMPILER (High-Fidelity Studio Spec)
+    console.log("[Trace Agent] Stage 5: Compiling High-End Studio Build Specification...");
     const siteName = getSiteName(targetUrl);
     const stage3Prompt = `
       SYSTEM ROLE:
-      You are Trace Design Compiler.
-      Your task is to convert structured UI schema into a **production-grade UI build specification**.
+      You are Trace Design Compiler v4 (Studio Edition).
+      Your task is to convert structured UI schema into a **precise, high-fidelity Studio Build Specification**.
 
       ---
-      CRITICAL RULES:
-      * DO NOT output JSON
-      * DO NOT output raw data
-      * DO NOT simplify
-      * Output MUST be:
-        * highly structured
-        * human-readable
-        * implementation-ready
+      CRITICAL OUTPUT RULES:
+      * NO JSON. NO RAW DATA.
+      * MANDATORY: Follow the "Studio/Agency" aesthetic structure provided below.
+      * DATA INTEGRITY: Use the ACTUAL text, colors, and structure from the input JSON, but map it into the "Premium Studio" components (Liquid Glass, BlurText, etc.) where applicable.
+      * OUTPUT FORMAT: Markdown.
 
       ---
       INPUT REFINED SCHEMA (TARGET: ${siteName}):
       Structured JSON: ${JSON.stringify(refinedJSON)}
       Network API Data: ${JSON.stringify(apiData.slice(0, 5))}
-      Raw Sanitized HTML: ${isFallbackMode ? htmlContent.slice(0, 8000) : "Captured via Playwright (see schema)"}
       Fallback Mode: ${isFallbackMode}
 
       ---
-      OBJECTIVE:
-      Clone the website at ${targetUrl} with 95%+ accuracy. 
-      Recreate the exact layout, color scheme, typography, and spacing.
-      Use Tailwind CSS and React for the frontend, ensuring it is fully responsive for mobile, tablet, and desktop.
-      Map all sections properly and use placeholders/real-URLs as defined in the data.
+      MANDATORY OUTPUT STRUCTURE (MANDATE THIS EXACT FORMAT):
+
+      # [SITE_NAME] UI BUILD SPECIFICATION (95%+ ACCURACY)
 
       ---
-      REQUIRED PRECISION:
-      1. Visual Precision: Match exact fonts, colors, and precise spacing/padding.
-      2. Functional Structure: Reconstruct functional elements like navigation bars, sliders, and interactive buttons.
-      3. Technology Stack: React + Next.js App Router + Tailwind CSS + Framer Motion.
-      4. Iterative Accuracy: Provide instructions for fixing sections to look exactly like the original.
+      ## PROJECT SETUP
+      * Framework: React + Vite/Next.js (App Router)
+      * Styling system: Tailwind CSS + shadcn/ui
+      * Fonts: 
+          - Heading: 'Instrument Serif' (italic) — [Include Import Link]
+          - Body: 'Barlow' (300, 400, 500, 600) — [Include Import Link]
+      * Dependencies: hls.js, motion (framer-motion), lucide-react, tailwindcss-animate
 
       ---
-      OUTPUT STRUCTURE (MANDATORY):
-      ---
-      PROJECT SETUP
-      * Framework: React + Next.js App Router
-      * Styling system: Tailwind CSS
-      * Fonts: [Primary font + Fallback + Import links]
-      * Dependencies: [Framer Motion, Lucide Icons, etc.]
+      ## DESIGN SYSTEM
+      * CSS Variables (:root):
+          - [Extract dominant colors and map to --background, --foreground, --primary, --border]
+      * Typography:
+          - Heading Style: font-heading italic text-white tracking-tight leading-[0.9]
+          - Body Style: font-body font-light text-white/60 text-sm
+      * [LIQUID GLASS CSS DEFINITION]:
+          - .liquid-glass (subtle)
+          - .liquid-glass-strong (visible)
+          - [Include full CSS logic for gradient border masks / backdrop blurs from memory]
 
       ---
-      DESIGN SYSTEM
-      * CSS variables (:root)
-        - [Listing all extracted hex colors]
-      * Color tokens:
-        - [Background, Foreground, Accent, Muted mapped to variables]
-      * Font system:
-        - Display: [Family, weight, sizes per breakpoint]
-        - Body: [Family, weight, sizes per breakpoint]
-      * Spacing scale: [xs to xl in px]
-      * Border radius: [sm to lg in px]
-      * Shadows: [sm to md with rgba]
+      ## SECTION 1 — NAVBAR (Fixed)
+      * Position: Fixed at top-4, z-50.
+      * Structure: [Logo] + [Liquid-glass pill with nav links] + [Primary CTA button]
+      * Data: [List actual navigation items extracted from JSON]
 
       ---
-      LAYOUT SYSTEM
-      * Page layout: [e.g., h-screen flex flex-col]
-      * Overflow rules: [e.g., overflow-y-auto]
-      * Container widths: [Mobile, Tablet, Desktop %]
+      ## SECTION 2 — HERO (Studio Scale)
+      * Background: [Video source / Poster fallback from JSON]
+      * Content: 
+          - Badge Pill: [Liquid-glass badge with "New/Announcement" text]
+          - Headline: [BlurText animation component with exact target text]
+          - Subtext: [Extract target headline and subtext]
+          - CTA: [Detailed Tailwind styling for buttons]
 
       ---
-      NAVIGATION
-      * Layout: [flex, justify, items, height, padding]
-      * Logo: [Description + size]
-      * Nav items: [List + layout + spacing]
-      * CTA button: [Detailed Tailwind styling]
+      ## SECTION 3 — PARTNERS / SOCIAL PROOF
+      * Layout: Centered column.
+      * Header: [Partner badge]
+      * Logos/Names: [List partners/companies extracted from site branding data]
 
       ---
-      HERO SECTION (IF PRESENT)
-      * Structure: [centered / split / video background]
-      * Headline: [Exact typography]
-      * Subtext: [Exact typography]
-      * CTA buttons: [Detailed Tailwind styling]
-      * Spacing: [padding/margin]
+      ## SECTION 4 — HOW IT WORKS / CAPABILITIES
+      * Background: [HLS video strategy (MUX/Cloudfront)]
+      * Logic: [Define if chess layout or grid]
+      * Data: [Explain how the specific service/product of the site works based on the content]
 
       ---
-      MEDIA / BACKGROUND
-      * Strategy: [video or image usage]
-      * Positioning: [absolute, object-fit]
-      * Layering: [z-index]
+      ## SECTION 5 — FEATURES GRID
+      * Grid Strategy: grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6
+      * Card Style: liquid-glass rounded-2xl p-6
+      * Content: [List feature titles and icons extracted from the trace]
 
       ---
-      ANIMATIONS (IF PRESENT)
-      * Framework: Framer Motion
-      * Definitions: [Initial, Animate, Duration, Delay] (e.g., for hover states)
+      ## SECTION 6 — STATS / DATA PROOF
+      * Logic: liquid-glass rounded-3xl, 4 columns
+      * Highlight Video: [Optional HLS desaturated bg]
+      * Data Points: [Extract numbers and labels from the trace results]
 
       ---
-      MAIN CONTENT (CRITICAL)
-      If grid detected:
-      * Grid system:
-        - Columns: [counts for mobile, tablet, desktop]
-        - Gap: [Tailwind gap class]
-      * Card structure:
-        - Thumbnail: [Tailwind sizing + fit + radius]
-        - Title: [Tailwind text style]
-        - Metadata: [Tailwind text style]
+      ## SECTION 7 — TESTIMONIALS
+      * Layout: 3-column grid
+      * Card Style: liquid-glass rounded-2xl p-8
+      * Data: [Extract names, roles, and quotes from the site content]
 
       ---
-      ADVANCED COMPONENTS (IF PRESENT)
-      * Sidebar / Dashboard / Tables / Charts:
-        - Internal layout clearly defined.
-        - Items/Rows styling.
+      ## SECTION 8 — CTA FOOTER
+      * Heading: [Final value proposition text]
+      * Buttons: [Primary vs Secondary styles]
+      * Links: [List footer links (Privacy/Terms)]
 
       ---
-      INTERACTIONS
-      * Hover states: [Bg changes, scale effects]
-      * Button behavior: [active:scale, ripples]
-      * Transitions: [e.g., transition-all duration-200]
-
-      ---
-      RESPONSIVENESS
-      * Mobile: [Breakpoint + Adjustments like hiding sidebar]
-      * Tablet: [Breakpoint + Adjustments like partial layout]
-      * Desktop: [Breakpoint + Full layout specs]
-
-      ---
-      FINAL RULES:
-      * Use EXACT values from schema
-      * Do NOT invent missing features
-      * If data is missing → skip, do not fabricate
-      * Maintain clarity and hierarchy
-      * Return ONLY the spec text.
-
-      ---
-      GOAL:
-      Produce a **high-end, production-ready UI build spec** that matches the input site with 95%+ accuracy.
+      ## ITERATIVE REFINEMENT
+      Provide a specific prompt for the user to use if visual tweaks are needed.
     `;
 
     let finalUIBuildSpec: string = "";
@@ -611,7 +579,7 @@ export async function POST(req: Request) {
       const stage3Response = await openai.chat.completions.create({
         model: "meta/llama-4-maverick-17b-128e-instruct",
         messages: [{ role: "user", content: stage3Prompt }],
-        temperature: 0,
+        temperature: 0.1,
       });
       finalUIBuildSpec = stage3Response.choices[0]?.message?.content || "Failed to compile spec.";
     } catch (e: any) {
