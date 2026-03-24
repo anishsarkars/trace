@@ -58,6 +58,14 @@ export function TracingUI() {
         body: JSON.stringify({ url }),
       });
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("[API Error Response]:", errorText);
+        setErrorMessage(response.status === 401 ? "Unauthorized. Please sign in." : "Server error or Database connection failure.");
+        setStatus("error");
+        return;
+      }
+
       const result = await response.json();
       
       if (result.success) {
