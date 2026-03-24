@@ -467,16 +467,17 @@ export async function POST(req: Request) {
 
       ---
       OBJECTIVE:
-      Transform this into a **technical, pixel-accurate UI build specification**.
+      Clone the website at ${targetUrl} with 95%+ accuracy. 
+      Recreate the exact layout, color scheme, typography, and spacing.
+      Use Tailwind CSS and React for the frontend, ensuring it is fully responsive for mobile, tablet, and desktop.
+      Map all sections properly and use placeholders/real-URLs as defined in the data.
 
       ---
-      CRITICAL RECONSTRUCTION RULES:
-      * Use EXACT color tokens and font families
-      * Use EXACT component names (navbar, sidebar, card)
-      * If grid is detected, define columns, spacing, and card layout precisely
-      * If media is present, provide the real extracted URLs
-      * Maintain exact vertical and horizontal spacing logic
-      * DO NOT simplify or generalize the architecture.
+      REQUIRED PRECISION:
+      1. Visual Precision: Match exact fonts, colors, and precise spacing/padding.
+      2. Functional Structure: Reconstruct functional elements like navigation bars, sliders, and interactive buttons.
+      3. Technology Stack: React + Next.js App Router + Tailwind CSS + Framer Motion.
+      4. Iterative Accuracy: Provide instructions for fixing sections to look exactly like the original.
 
       ---
       OUTPUT STRUCTURE (MANDATORY):
