@@ -65,15 +65,15 @@ export function TracingUI() {
 
   return (
     <div className="flex w-full max-w-2xl flex-col gap-6 px-6 relative z-10">
-      <div className={`relative overflow-hidden rounded-2xl border ${status === 'error' ? 'border-red-500/50' : 'border-black/5'} bg-white p-1 px-2 focus-within:ring-2 focus-within:ring-accent/50 transition-all shadow-[0_0_40px_rgba(255,255,255,0.4)]`}>
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500">
+      <div className={`relative overflow-hidden rounded-2xl border ${status === 'error' ? 'border-red-500/50' : 'border-black/5'} bg-white p-1 px-1 sm:px-2 focus-within:ring-2 focus-within:ring-accent/50 transition-all shadow-[0_0_40px_rgba(255,255,255,0.4)]`}>
+        <div className="flex items-center gap-1 sm:gap-3">
+          <div className="hidden sm:flex h-10 w-10 items-center justify-center rounded-xl bg-zinc-100 text-zinc-500 shrink-0">
             <Search className="h-5 w-5" />
           </div>
           <input 
             type="text" 
-            placeholder="Paste website URL (e.g., apple.com)" 
-            className="flex-1 bg-transparent py-4 text-sm font-medium text-black outline-none placeholder:text-zinc-400"
+            placeholder="Search URL..." 
+            className="flex-1 bg-transparent py-4 pl-3 sm:pl-0 text-sm font-medium text-black outline-none placeholder:text-zinc-400 min-w-0"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleTrace()}
@@ -82,10 +82,10 @@ export function TracingUI() {
           <button 
             onClick={handleTrace}
             disabled={status !== "idle" && status !== "completed" && status !== "error"}
-            className="rounded-xl bg-black px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-50 shadow-lg"
+            className="rounded-xl bg-black px-4 sm:px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-zinc-800 disabled:opacity-50 shadow-lg whitespace-nowrap"
             suppressHydrationWarning
           >
-            {status === "idle" || status === "completed" || status === "error" ? "Trace URL" : "Tracing..."}
+            {status === "idle" || status === "completed" || status === "error" ? "Trace" : "..."}
           </button>
         </div>
       </div>
@@ -155,7 +155,7 @@ export function TracingUI() {
               <pre className="whitespace-pre-wrap">{resultPrompt}</pre>
             </div>
 
-            <div className="flex items-center gap-4 pt-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4">
               <button className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-black px-6 py-4 text-sm font-bold text-white transition-all hover:bg-zinc-800 shadow-xl group">
                 Export to IDE
                 <ExternalLink className="h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />

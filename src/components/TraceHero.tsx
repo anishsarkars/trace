@@ -45,8 +45,9 @@ export function TraceHero() {
         </div>
 
         {/* Right: CTA */}
-        <button className="flex items-center gap-2 rounded-full bg-white px-6 py-2 text-xs font-bold text-black transition-all hover:bg-zinc-100 group shadow-sm" suppressHydrationWarning>
-          <span className="font-barlow uppercase">Book A Meeting</span>
+        <button className="flex items-center gap-2 rounded-full bg-white px-4 md:px-6 py-2 text-xs font-bold text-black transition-all hover:bg-zinc-100 group shadow-sm shrink-0" suppressHydrationWarning>
+          <span className="font-barlow uppercase hidden sm:inline">Book A Meeting</span>
+          <span className="font-barlow uppercase sm:hidden">Book</span>
           <ArrowUpRight className="h-3 w-3 transition-transform group-hover:rotate-45" />
         </button>
       </nav>
@@ -59,10 +60,10 @@ export function TraceHero() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center"
           >
-            <span className="text-white/90 text-3xl sm:text-6xl font-medium font-barlow tracking-[-4px] uppercase leading-tight drop-shadow-lg">
+            <span className="text-white/90 text-3xl sm:text-6xl font-medium font-barlow tracking-[-2px] sm:tracking-[-4px] uppercase leading-tight drop-shadow-lg">
               Turn any website into
             </span>
-            <span className="text-[54px] sm:text-[72px] text-white/80 font-instrument italic leading-none mt-2 drop-shadow-md">
+            <span className="text-[42px] sm:text-[72px] text-white/80 font-instrument italic leading-none mt-2 drop-shadow-md">
               a working UI.
             </span>
           </motion.h1>
