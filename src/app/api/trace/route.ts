@@ -108,6 +108,7 @@ export async function POST(req: Request) {
     let extractedImages: any[] = [];
     let extractedVideos: any[] = [];
     let fullCSS: string[] = [];
+    let apiData: any[] = [];
 
     // STEP 1: MULTI-SOURCE CRAWL (Firecrawl for markdown/screenshot, Playwright for measurements)
     if (firecrawl) {
@@ -127,33 +128,30 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log("[Trace Agent] Stage 1b: Layout Measurement (Playwright)...");
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      viewport: { width: 1280, height: 800 },
-    });
-    const page = await context.newPage();
-
-    // ⚡ STEP 1 — CAPTURE NETWORK DATA
-    const apiData: any[] = [];
-    page.on("response", async (response) => {
-      try {
-        const url = response.url();
-        if (url.includes("youtubei") || url.includes("api")) {
-          const data = await response.json();
-          apiData.push({ url, data });
-        }
-      } catch (e) {
-        // Ignore binary or non-json responses
-      }
-    });
-    
-    let finalTargetUrl = targetUrl;
+    let isFallbackMode = false;
     try {
+      console.log("[Trace Agent] Stage 1b: Layout Measurement (Playwright)...");
+      const { chromium } = await import("playwright");
+      const browser = await chromium.launch({ headless: true });
+      const context = await browser.newContext({
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        viewport: { width: 1280, height: 800 },
+      });
+      const page = await context.newPage();
+
+      // ⚡ STEP 1 — CAPTURE NETWORK DATA
+      page.on("response", async (response) => {
+        try {
+          const url = response.url();
+          if (url.includes("youtubei") || url.includes("api")) {
+            const data = await response.json();
+            apiData.push({ url, data });
+          }
+        } catch (e) {}
+      });
+      
+      let finalTargetUrl = targetUrl;
       try {
-        // Change to 'domcontentloaded' as 'networkidle' can hang on sites with long-polling/heartbeats
         await page.goto(finalTargetUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
       } catch (initialErr: any) {
         if (initialErr.message.includes("ERR_NAME_NOT_RESOLVED") && !finalTargetUrl.includes("www.")) {
@@ -164,14 +162,10 @@ export async function POST(req: Request) {
         }
       }
       
-      // Manual wait to allow some dynamic content to load
       await page.waitForTimeout(3000);
       
-      // 🔥 1. Playwright Deep Extraction
       const extractionData = await page.evaluate(() => {
         const elements: any[] = [];
-        
-        // 🔥 2. Media Extraction
         const pageImages = Array.from(document.querySelectorAll("img")).map(img => ({
           src: img.src,
           width: img.width,
@@ -179,7 +173,6 @@ export async function POST(req: Request) {
           x: img.getBoundingClientRect().x,
           y: img.getBoundingClientRect().y
         }));
-        
         const pageVideos = Array.from(document.querySelectorAll("video")).map(v => ({
           src: v.src,
           width: v.videoWidth,
@@ -188,65 +181,44 @@ export async function POST(req: Request) {
 
         document.querySelectorAll("body *").forEach(el => {
           const rect = el.getBoundingClientRect();
-          // Filter visible only
           if (rect.width > 20 && rect.height > 10) {
             const style = window.getComputedStyle(el);
-            const hasImage = el.querySelector('img') !== null || el.tagName === 'IMG';
-            
             elements.push({
               tag: el.tagName,
               text: (el as HTMLElement).innerText?.slice(0, 100).replace(/\n/g, ' '),
-              x: Math.round(rect.x),
-              y: Math.round(rect.y),
-              width: Math.round(rect.width),
-              height: Math.round(rect.height),
-              fontSize: style.fontSize,
-              fontFamily: style.fontFamily.split(',')[0].replace(/['"]/g, ''),
-              color: style.color,
-              background: style.backgroundColor,
-              display: style.display,
-              hasImage
+              x: Math.round(rect.x), y: Math.round(rect.y),
+              width: Math.round(rect.width), height: Math.round(rect.height),
+              fontSize: style.fontSize, fontFamily: style.fontFamily.split(',')[0].replace(/['"]/g, ''),
+              color: style.color, background: style.backgroundColor, display: style.display,
+              hasImage: el.querySelector('img') !== null || el.tagName === 'IMG'
             });
           }
         });
-        
-        return {
-          elements,
-          images: pageImages.slice(0, 30),
-          videos: pageVideos.slice(0, 10)
-        };
+        return { elements, images: pageImages.slice(0, 30), videos: pageVideos.slice(0, 10) };
       });
 
       layoutData = extractionData.elements;
       extractedImages = extractionData.images;
       extractedVideos = extractionData.videos;
 
-      // ⚡ STEP 2 — CAPTURE FULL CSS
       fullCSS = await page.evaluate(() => {
-        return Array.from(document.styleSheets)
-          .map(sheet => {
-            try {
-              return Array.from(sheet.cssRules).map(r => r.cssText);
-            } catch {
-              return [];
-            }
-          })
-          .flat();
+        return Array.from(document.styleSheets).map(sheet => {
+          try { return Array.from(sheet.cssRules).map(r => r.cssText); } catch { return []; }
+        }).flat();
       });
 
-      // Fallback for markdown/html if Firecrawl failed
-      if (!markdownContent) markdownContent = await page.evaluate(() => document.body.innerText.slice(0, 10000));
-      if (!htmlContent) htmlContent = await page.content();
       if (!screenshotBase64) {
         const screenshot = await page.screenshot({ fullPage: false, type: "jpeg", quality: 80 });
         screenshotBase64 = screenshot.toString("base64");
       }
-      
       await browser.close();
     } catch (crawlError: any) {
-      console.error("[Playwright Error]:", crawlError.message);
-      await browser.close();
-      if (!markdownContent) throw crawlError;
+      console.warn("[Trace Agent] Local Playwright failed (expected on Vercel). Falling back to Firecrawl-only extraction.");
+      isFallbackMode = true;
+      // If we don't have images/layout from Playwright, try to derive them from Firecrawl's markdown/html
+      if (markdownContent) {
+          extractedImages = (markdownContent.match(/!\[.*?\]\((.*?)\)/g) || []).map(m => ({ src: m.match(/\((.*?)\)/)?.[1] || "" }));
+      }
     }
 
     // NORMALIZATION LAYER & SANITIZATION
@@ -475,7 +447,9 @@ export async function POST(req: Request) {
 
       ---
       INPUT REFINED SCHEMA (TARGET: ${siteName}):
-      ${JSON.stringify(refinedJSON)}
+      Structured JSON: ${JSON.stringify(refinedJSON)}
+      Network API Data: ${JSON.stringify(apiData.slice(0, 5))}
+      Fallback Mode: ${isFallbackMode}
 
       ---
       OBJECTIVE:
