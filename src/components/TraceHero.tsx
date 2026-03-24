@@ -24,8 +24,8 @@ export function TraceHero() {
             type="video/mp4"
           />
         </video>
-        {/* Dark Fade Overlay for Contrast */}
-        <div className="absolute inset-0 bg-black/15" />
+        {/* Discrete Overlay for Text Legibility */}
+        <div className="absolute inset-0 bg-black/5" />
       </div>
 
       {/* Transparent Minimal Navbar */}
