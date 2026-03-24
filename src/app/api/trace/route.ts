@@ -1,5 +1,7 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import OpenAI from "openai";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
 
 const firecrawl = process.env.FIRECRAWL_API_KEY ? new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY }) : null;
 
@@ -99,6 +101,25 @@ export async function POST(req: Request) {
     }
 
     const targetUrl = url.indexOf('http') === 0 ? url : "https://" + url;
+    const { userId } = await auth();
+    if (!userId) {
+      return Response.json({ success: false, error: "Unauthorized. Please sign in to trace." }, { status: 401 });
+    }
+
+    // ⚡ STEP 3 — CREDIT SYSTEM (CORE LOGIC)
+    let dbUser = await prisma.user.findUnique({ where: { userId } });
+    
+    // Create user if not exists
+    if (!dbUser) {
+      dbUser = await prisma.user.create({
+        data: { userId, credits: 15, plan: "free" }
+      });
+    }
+
+    if (dbUser.credits <= 0) {
+      return Response.json({ success: false, error: "You've reached your monthly limit. Upgrade to Pro for unlimited traces." });
+    }
+
     console.log("[Trace Agent] Initializing multi-stage crawl & extraction for: " + targetUrl);
 
     let markdownContent = "";
@@ -587,13 +608,21 @@ export async function POST(req: Request) {
       finalUIBuildSpec = `PRODUCTION BUILD SPEC (FALLBACK):\n${JSON.stringify(refinedJSON, null, 2)}`;
     }
 
+    // ⚡ STEP 3 — DEDUCT CREDITS AFTER SUCCESS
+    await prisma.user.update({
+      where: { userId: dbUser.userId },
+      data: { credits: { decrement: 1 } }
+    });
+
+    console.log("[Trace Agent] Reconstruction Complete. Credit deducted.");
     return Response.json({ 
       success: true, 
       prompt: finalUIBuildSpec,
       debug: {
         extraction: structuredJSON,
         refinement: refinedJSON,
-        network: manualData.api
+        network: manualData.api,
+        creditsLeft: dbUser.credits - 1
       }
     });
 
