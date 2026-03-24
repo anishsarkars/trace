@@ -213,11 +213,24 @@ export async function POST(req: Request) {
       }
       await browser.close();
     } catch (crawlError: any) {
-      console.warn("[Trace Agent] Local Playwright failed (expected on Vercel). Falling back to Firecrawl-only extraction.");
+      console.warn("[Trace Agent] Local Playwright failed (expected on Vercel). Falling back to Structural HTML Clipping.");
       isFallbackMode = true;
-      // If we don't have images/layout from Playwright, try to derive them from Firecrawl's markdown/html
-      if (markdownContent) {
-          extractedImages = (markdownContent.match(/!\[.*?\]\((.*?)\)/g) || []).map(m => ({ src: m.match(/\((.*?)\)/)?.[1] || "" }));
+      
+      // 🔥 4b. Structural HTML Clipping (Fallback for Vercel)
+      if (htmlContent) {
+        // Simple regex-based sanitized HTML extraction to capture structure without 10MB of noise
+        const sanitizedHTML = htmlContent
+          .replace(/<script\b[^>]*>([\s\S]*?)<\/script>/gmu, '')
+          .replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gmu, '')
+          .replace(/<svg\b[^>]*>([\s\S]*?)<\/svg>/gmu, '[SVG]')
+          .slice(0, 30000);
+          
+        htmlContent = sanitizedHTML; // Override with cleaned version for AI context
+        
+        // Extract links/images from HTML even in fallback
+        extractedImages = (htmlContent.match(/<img[^>]+src="([^">]+)"/g) || []).map(m => ({
+          src: m.match(/src="([^">]+)"/)?.[1] || ""
+        })).slice(0, 15);
       }
     }
 
@@ -449,11 +462,21 @@ export async function POST(req: Request) {
       INPUT REFINED SCHEMA (TARGET: ${siteName}):
       Structured JSON: ${JSON.stringify(refinedJSON)}
       Network API Data: ${JSON.stringify(apiData.slice(0, 5))}
+      Raw Sanitized HTML: ${isFallbackMode ? htmlContent.slice(0, 8000) : "Captured via Playwright (see schema)"}
       Fallback Mode: ${isFallbackMode}
 
       ---
       OBJECTIVE:
-      Transform this into a **detailed UI build prompt** similar to high-end design system specs.
+      Transform this into a **technical, pixel-accurate UI build specification**.
+
+      ---
+      CRITICAL RECONSTRUCTION RULES:
+      * Use EXACT color tokens and font families
+      * Use EXACT component names (navbar, sidebar, card)
+      * If grid is detected, define columns, spacing, and card layout precisely
+      * If media is present, provide the real extracted URLs
+      * Maintain exact vertical and horizontal spacing logic
+      * DO NOT simplify or generalize the architecture.
 
       ---
       OUTPUT STRUCTURE (MANDATORY):
