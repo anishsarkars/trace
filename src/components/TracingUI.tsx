@@ -111,10 +111,10 @@ export function TracingUI() {
             className="flex flex-col gap-3"
           >
             {steps.map((step, idx) => {
-              const order = ["capturing", "normalizing", "structuring", "refining", "compiling"];
-              const currentStepIdx = order.indexOf(status);
+              const order = ["capturing", "normalizing", "structuring", "refining", "compiling", "completed"];
+              const currentStepIdx = order.indexOf(status as any);
               const isActive = status === step.key;
-              const isDone = currentStepIdx > idx || status === "completed";
+              const isDone = currentStepIdx > idx;
               
               return (
                 <div key={step.key} className={`flex items-center justify-between rounded-xl border p-4 transition-all ${isActive ? 'bg-white border-accent/20 shadow-md scale-102' : isDone ? 'bg-white/80 border-transparent opacity-100' : 'bg-white/50 border-transparent opacity-60'}`}>
