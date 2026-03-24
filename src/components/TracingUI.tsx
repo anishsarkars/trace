@@ -34,6 +34,18 @@ export function TracingUI() {
     { key: "compiling", label: "5. Compile (Final Prompt)", icon: Blocks },
   ];
 
+  const handleUpgrade = async () => {
+    try {
+      const res = await fetch("/api/payment/create", { method: "POST" });
+      const data = await res.json();
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleTrace = async () => {
     if (!url) return;
     if (!isSignedIn) return;
@@ -97,7 +109,10 @@ export function TracingUI() {
             </span>
           </div>
           {userData.plan === 'free' && (
-            <button className="text-[10px] font-bold text-black hover:text-accent transition-colors uppercase tracking-[0.2em] flex items-center gap-1 group">
+            <button 
+              onClick={handleUpgrade}
+              className="text-[10px] font-bold text-black hover:text-accent transition-colors uppercase tracking-[0.2em] flex items-center gap-1 group"
+            >
               Upgrade to Pro <Zap className="h-3 w-3 fill-accent text-accent transition-transform group-hover:scale-125" />
             </button>
           )}
