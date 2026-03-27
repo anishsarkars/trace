@@ -43,7 +43,7 @@ export function Navbar() {
           <Show when="signed-out">
             <SignInButton mode="modal">
               <button className="flex items-center gap-2 bg-white text-black px-6 py-2.5 rounded-full text-[10px] font-bold font-body uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-black/20">
-                Account
+                Login
                 <ArrowUpRight className="h-3 w-3" />
               </button>
             </SignInButton>

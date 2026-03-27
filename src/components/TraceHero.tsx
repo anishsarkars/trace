@@ -6,7 +6,7 @@ import { TracingUI } from "./TracingUI";
 
 export function TraceHero() {
   return (
-    <section className="relative min-h-[120vh] w-full flex flex-col items-center justify-start pt-40 pb-32 overflow-hidden">
+    <section className="relative min-h-[125vh] w-full flex flex-col items-center justify-start pt-40 pb-32 overflow-hidden">
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
         <video
@@ -28,32 +28,10 @@ export function TraceHero() {
         <div className="absolute inset-0 bg-black/5" />
       </div>
 
-      {/* Transparent Minimal Navbar */}
-      <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between w-[90%] max-w-5xl px-4 py-3 bg-white/20 backdrop-blur-xl border border-white/20 rounded-[16px] shadow-sm" suppressHydrationWarning>
-        {/* Left: Logo */}
-        <div className="flex items-center gap-2">
-          <span className="text-base font-semibold font-barlow tracking-tight uppercase text-white drop-shadow-sm">Trace</span>
-        </div>
 
-        {/* Center: Menu */}
-        <div className="hidden md:flex items-center gap-8">
-          {['About', 'Works', 'Services'].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="text-[14px] font-medium font-barlow text-white/70 hover:text-white transition-colors uppercase tracking-wider drop-shadow-sm">
-              {item}
-            </a>
-          ))}
-        </div>
-
-        {/* Right: CTA */}
-        <button className="flex items-center gap-2 rounded-full bg-white px-4 md:px-6 py-2 text-xs font-bold text-black transition-all hover:bg-zinc-100 group shadow-sm shrink-0" suppressHydrationWarning>
-          <span className="font-barlow uppercase hidden sm:inline">Book A Meeting</span>
-          <span className="font-barlow uppercase sm:hidden">Book</span>
-          <ArrowUpRight className="h-3 w-3 transition-transform group-hover:rotate-45" />
-        </button>
-      </nav>
 
       {/* Hero Content */}
-      <div className="relative z-10 flex flex-col items-center gap-12 text-center px-6 mt-5">
+      <div className="relative z-10 flex flex-col items-center gap-5 text-center px-6 mt-5">
         <div className="flex flex-col items-center gap-6">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -87,6 +65,39 @@ export function TraceHero() {
         >
           <TracingUI />
         </motion.div>
+      </div>
+
+      {/* Cloud Transition Layer - Low Profile */}
+      <div className="absolute bottom-0 left-0 right-0 h-[120px] z-[5] pointer-events-none overflow-hidden">
+        {/* Main cloud fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-full bg-gradient-to-t from-white via-white/40 to-transparent" />
+
+        {/* Floating subtle clouds at the very base */}
+        {[...Array(3)].map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, x: i % 2 === 0 ? -100 : 100 }}
+            animate={{
+              opacity: [0, 0.3, 0],
+              x: i % 2 === 0 ? [null, 150] : [null, -150],
+              y: [0, -10, 0]
+            }}
+            transition={{
+              duration: 12 + i * 4,
+              repeat: Infinity,
+              ease: "linear",
+              delay: i * 2
+            }}
+            className="absolute -bottom-10"
+            style={{
+              left: `${10 + i * 35}%`,
+              width: `${300 + i * 150}px`,
+              height: `${100 + i * 50}px`,
+              background: 'radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%)',
+              filter: 'blur(40px)',
+            }}
+          />
+        ))}
       </div>
     </section>
   );
