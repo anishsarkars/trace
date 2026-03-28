@@ -4,14 +4,20 @@ import pg from "pg";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
-const adapter = new PrismaPg(pool as any);
+const databaseUrl = process.env.DATABASE_URL || "";
+const isPg = databaseUrl.startsWith("postgres") || databaseUrl.startsWith("postgresql");
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    adapter,
-    log: ["query"],
-  });
+let prismaClient: PrismaClient;
+
+if (isPg) {
+  const pool = new pg.Pool({ connectionString: databaseUrl });
+  const adapter = new PrismaPg(pool as any);
+  prismaClient = new PrismaClient({ adapter, log: ["query"] });
+} else {
+  // SQLite or other direct providers
+  prismaClient = new PrismaClient({ log: ["query"] });
+}
+
+export const prisma = globalForPrisma.prisma || prismaClient;
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
