@@ -5,16 +5,18 @@ import pg from "pg";
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
 const databaseUrl = process.env.DATABASE_URL || "";
-const isPg = databaseUrl.startsWith("postgres") || databaseUrl.startsWith("postgresql");
+// Default to PostgreSQL logic unless explicitly using a local SQLite file in dev
+const isLocalSqlite = databaseUrl.startsWith("file:");
 
 let prismaClient: PrismaClient;
 
-if (isPg) {
+if (!isLocalSqlite) {
+  // Use the PostgreSQL Pool adapter for production (Vercel) and PG-based dev
   const pool = new pg.Pool({ connectionString: databaseUrl });
   const adapter = new PrismaPg(pool as any);
   prismaClient = new PrismaClient({ adapter, log: ["query"] });
 } else {
-  // SQLite or other direct providers
+  // Use the default driver for local SQLite
   prismaClient = new PrismaClient({ log: ["query"] });
 }
 
