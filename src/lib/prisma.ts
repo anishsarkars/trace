@@ -1,25 +1,15 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import pg from "pg";
+import { PrismaClient } from '@prisma/client'
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
-
-const databaseUrl = process.env.DATABASE_URL || "";
-// Default to PostgreSQL logic unless explicitly using a local SQLite file in dev
-const isLocalSqlite = databaseUrl.startsWith("file:");
-
-let prismaClient: PrismaClient;
-
-if (!isLocalSqlite) {
-  // Use the PostgreSQL Pool adapter for production (Vercel) and PG-based dev
-  const pool = new pg.Pool({ connectionString: databaseUrl });
-  const adapter = new PrismaPg(pool as any);
-  prismaClient = new PrismaClient({ adapter, log: ["query"] });
-} else {
-  // Use the default driver for local SQLite
-  prismaClient = new PrismaClient({ log: ["query"] });
+const prismaClientSingleton = () => {
+  return new PrismaClient()
 }
 
-export const prisma = globalForPrisma.prisma || prismaClient;
+declare global {
+  var prisma: undefined | ReturnType<typeof prismaClientSingleton>
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+const prisma = globalThis.prisma ?? prismaClientSingleton()
+
+export default prisma
+
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma

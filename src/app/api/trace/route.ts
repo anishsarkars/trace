@@ -1,5 +1,10 @@
 import FirecrawlApp from "@mendable/firecrawl-js";
 import OpenAI from "openai";
+import { auth } from "@clerk/nextjs/server";
+import prisma from "@/lib/prisma";
+
+export const maxDuration = 60;
+export const dynamic = 'force-dynamic';
 
 const firecrawl = process.env.FIRECRAWL_API_KEY ? new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY }) : null;
 
@@ -115,6 +120,36 @@ export async function POST(req: Request) {
     }
 
     const targetUrl = url.indexOf('http') === 0 ? url : "https://" + url;
+
+    // AUTH & CREDIT CHECK
+    let userId;
+    try {
+      const authResult = await auth();
+      userId = authResult.userId;
+    } catch (authErr: any) {
+      console.error("[Auth Error]:", authErr.message);
+      return Response.json({ success: false, error: "Authentication Error" }, { status: 401 });
+    }
+
+    if (!userId) {
+      return Response.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    let user;
+    try {
+      user = await prisma.user.findUnique({ where: { userId } });
+      if (!user) {
+        user = await prisma.user.create({ data: { userId, credits: 15, plan: "free" } });
+      }
+    } catch (dbErr: any) {
+      console.error("[Database Connection Error]:", dbErr.message);
+      return Response.json({ success: false, error: "Database Connection Failure" }, { status: 500 });
+    }
+
+    if (user.credits <= 0) {
+      return Response.json({ success: false, error: "No credits left. Please upgrade." }, { status: 403 });
+    }
+
     console.log("[Trace Agent] Initializing multi-stage crawl & extraction for: " + targetUrl);
 
     let markdownContent = "";
@@ -140,66 +175,70 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log("[Trace Agent] Stage 1b: Layout Measurement (Playwright)...");
-    const { chromium } = await import("playwright");
-    const browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      viewport: { width: 1280, height: 800 },
-    });
-    const page = await context.newPage();
-    
-    let finalTargetUrl = targetUrl;
-    try {
-      try {
-        await page.goto(finalTargetUrl, { waitUntil: "networkidle", timeout: 20000 });
-      } catch (initialErr: any) {
-        if (initialErr.message.includes("ERR_NAME_NOT_RESOLVED") && !finalTargetUrl.includes("www.")) {
-          finalTargetUrl = finalTargetUrl.replace("://", "://www.");
-          await page.goto(finalTargetUrl, { waitUntil: "networkidle", timeout: 20000 });
-        } else {
-          throw initialErr;
-        }
-      }
-      
-      await page.waitForTimeout(2000);
-      
-      // Perform MEASUREMENT MODE extraction
-      layoutData = await page.evaluate(() => {
-        const elements: any[] = [];
-        document.querySelectorAll("body *").forEach(el => {
-          const rect = el.getBoundingClientRect();
-          if (rect.width > 50 && rect.height > 20) {
-            const style = window.getComputedStyle(el);
-            elements.push({
-              tag: el.tagName,
-              text: (el as HTMLElement).innerText?.slice(0, 50).replace(/\n/g, ' '),
-              x: Math.round(rect.x),
-              y: Math.round(rect.y),
-              width: Math.round(rect.width),
-              height: Math.round(rect.height),
-              fontSize: style.fontSize,
-              fontFamily: style.fontFamily,
-              color: style.color
-            });
-          }
-        });
-        return elements.slice(0, 150); // Limit to top 150 elements for context window safety
-      });
+    const isLocal = !process.env.VERCEL;
 
-      // Fallback for markdown/html if Firecrawl failed
-      if (!markdownContent) markdownContent = await page.evaluate(() => document.body.innerText.slice(0, 10000));
-      if (!htmlContent) htmlContent = await page.content();
-      if (!screenshotBase64) {
-        const screenshot = await page.screenshot({ fullPage: false, type: "jpeg", quality: 80 });
-        screenshotBase64 = screenshot.toString("base64");
+    if (isLocal) {
+      console.log("[Trace Agent] Stage 1b: Layout Measurement (Playwright)...");
+      try {
+        const { chromium } = await import("playwright");
+        const browser = await chromium.launch({ headless: true });
+        const context = await browser.newContext({
+          userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          viewport: { width: 1280, height: 800 },
+        });
+        const page = await context.newPage();
+        
+        let finalTargetUrl = targetUrl;
+        try {
+          await page.goto(finalTargetUrl, { waitUntil: "networkidle", timeout: 20000 });
+        } catch (initialErr: any) {
+          if (initialErr.message.includes("ERR_NAME_NOT_RESOLVED") && !finalTargetUrl.includes("www.")) {
+            finalTargetUrl = finalTargetUrl.replace("://", "://www.");
+            await page.goto(finalTargetUrl, { waitUntil: "networkidle", timeout: 20000 });
+          } else {
+            throw initialErr;
+          }
+        }
+        
+        await page.waitForTimeout(2000);
+        
+        // Perform MEASUREMENT MODE extraction
+        layoutData = await page.evaluate(() => {
+          const elements: any[] = [];
+          document.querySelectorAll("body *").forEach(el => {
+            const rect = el.getBoundingClientRect();
+            if (rect.width > 50 && rect.height > 20) {
+              const style = window.getComputedStyle(el);
+              elements.push({
+                tag: el.tagName,
+                text: (el as HTMLElement).innerText?.slice(0, 50).replace(/\n/g, ' '),
+                x: Math.round(rect.x),
+                y: Math.round(rect.y),
+                width: Math.round(rect.width),
+                height: Math.round(rect.height),
+                fontSize: style.fontSize,
+                fontFamily: style.fontFamily,
+                color: style.color
+              });
+            }
+          });
+          return elements.slice(0, 150);
+        });
+
+        // Fallback for markdown/html if Firecrawl failed
+        if (!markdownContent) markdownContent = await page.evaluate(() => document.body.innerText.slice(0, 10000));
+        if (!htmlContent) htmlContent = await page.content();
+        if (!screenshotBase64) {
+          const screenshot = await page.screenshot({ fullPage: false, type: "jpeg", quality: 80 });
+          screenshotBase64 = screenshot.toString("base64");
+        }
+        
+        await browser.close();
+      } catch (crawlError: any) {
+        console.error("[Playwright Error]:", crawlError.message);
       }
-      
-      await browser.close();
-    } catch (crawlError: any) {
-      console.error("[Playwright Error]:", crawlError.message);
-      await browser.close();
-      if (!markdownContent) throw crawlError;
+    } else {
+      console.log("[Trace Agent] Production Mode (Vercel): Skipping Playwright measurement, relying on Firecrawl + Spatial Inference.");
     }
 
     // NORMALIZATION LAYER
@@ -245,7 +284,8 @@ export async function POST(req: Request) {
       CRITICAL MODES:
       - STRICT: No generic UI generation, no redesign, no added features.
       - VISUAL: Screenshot/DOM hierarchy is ground truth. Layout must match exactly.
-      - MEASUREMENT: Use provided layout coordinates (x, y, width, height) and computed styles.
+      - MEASUREMENT: Use provided layout coordinates (if available).
+      - SPATIAL INFERENCE: ${layoutData.length > 0 ? 'Use PHYSICAL COORDINATES provided.' : 'PHYSICAL COORDINATES UNAVAILABLE. Infer spatial layout from HTML hierarchy and Markdown flow (Production Mode).'}
       - NO INTERPRETATION: Do NOT simplify, do NOT improve, do NOT standardize. Preserve imperfections.
       
       INPUT DATA:
@@ -328,9 +368,16 @@ export async function POST(req: Request) {
     console.log("[Trace Agent] Stage 3: Compiling Deterministic Build Prompt...");
     const finalUIBuildPrompt = buildPromptFromJSON(refinedJSON);
 
+    // DECREMENT CREDITS ON SUCCESS
+    await prisma.user.update({
+      where: { userId },
+      data: { credits: { decrement: 1 } }
+    });
+
     return Response.json({ 
       success: true, 
       prompt: finalUIBuildPrompt,
+      creditsRemaining: user.credits - 1,
       debug: {
         extraction: structuredJSON,
         refinement: refinedJSON
