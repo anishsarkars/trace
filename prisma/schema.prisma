@@ -3,13 +3,14 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
   id        String   @id @default(cuid())
-  userId    String   @unique // Clerk ID
-  plan      String   @default("free") // "free" or "pro"
+  userId    String   @unique
+  plan      String   @default("free")
   credits   Int      @default(15)
   lastReset DateTime @default(now())
   createdAt DateTime @default(now())

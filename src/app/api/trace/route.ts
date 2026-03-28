@@ -398,7 +398,7 @@ export async function POST(req: Request) {
 
     try {
       const stage1Response = await openai.chat.completions.create({
-        model: "meta/llama-4-maverick-17b-128e-instruct",
+        model: "meta/llama-3.1-405b-instruct",
         messages: [{ role: "user", content: stage1Prompt }],
         temperature: 0.1, // High precision
         response_format: { type: "json_object" } as any,
@@ -481,7 +481,7 @@ export async function POST(req: Request) {
     let refinedJSON: any = null;
     try {
       const stage2Response = await openai.chat.completions.create({
-        model: "meta/llama-4-maverick-17b-128e-instruct",
+        model: "meta/llama-3.1-405b-instruct",
         messages: [{ role: "user", content: stage2Prompt }],
         temperature: 0.1,
         response_format: { type: "json_object" } as any,
@@ -598,7 +598,7 @@ export async function POST(req: Request) {
     let finalUIBuildSpec: string = "";
     try {
       const stage3Response = await openai.chat.completions.create({
-        model: "meta/llama-4-maverick-17b-128e-instruct",
+        model: "meta/llama-3.1-405b-instruct",
         messages: [{ role: "user", content: stage3Prompt }],
         temperature: 0.1,
       });
