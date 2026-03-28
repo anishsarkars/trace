@@ -1,64 +1,71 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Laptop, ArrowUpRight, Zap, Target, Layers } from "lucide-react";
-import { SignInButton, Show, UserButton, useUser } from "@clerk/nextjs";
+import { ArrowUpRight, Layers } from "lucide-react";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 
 export function Navbar() {
-  const { isSignedIn } = useUser();
+  const { isLoaded, isSignedIn } = useUser();
 
   const navLinks = [
-    { name: "Process", href: "#about" },
-    { name: "Pricing", href: "#pricing" },
+    { name: "About", href: "#about" },
+    { name: "Works", href: "#works" },
+    { name: "Services", href: "#services" },
+    { name: "Testimonial", href: "#testimonials" },
   ];
 
   return (
-    <nav className="fixed top-4 left-0 right-0 z-[100] flex items-center justify-between px-8 md:px-12 pointer-events-none">
-      {/* Left: Logo */}
-      <div className="flex items-center gap-3 pointer-events-auto">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white shadow-xl shadow-black/10">
-          <Layers className="h-6 w-6 text-black" />
+    <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-fit px-4 py-2.5 bg-white/10 backdrop-blur-3xl border border-white/20 rounded-[16px] shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] flex items-center gap-12 pointer-events-auto transition-all duration-500 hover:bg-white/20 hover:border-white/40 group">
+      {/* Left: Logo (Minimal) */}
+      <div className="flex items-center gap-2.5 pl-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 border border-white/20 shadow-xl transition-all group-hover:bg-white group-hover:scale-110 duration-500">
+          <Layers className="h-4 w-4 text-white group-hover:text-black transition-colors duration-500" />
         </div>
-        <span className="text-2xl font-heading italic text-white tracking-tighter drop-shadow-md hidden sm:block">
+        <span className="text-sm font-heading font-bold text-white tracking-widest uppercase hidden lg:block">
           Trace
         </span>
       </div>
 
-      {/* Center: Liquid Glass Pill */}
-      <div className="absolute left-1/2 -translate-x-1/2 pointer-events-auto">
-        <div className="liquid-glass border border-white/20 rounded-full px-2 py-1.5 flex items-center gap-6 shadow-2xl backdrop-blur-3xl">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              className="px-4 py-1.5 text-xs font-bold font-body text-white/70 hover:text-white transition-colors uppercase tracking-widest"
-            >
-              {link.name}
-            </a>
-          ))}
-          
-          <div className="h-4 w-[1.5px] bg-white/10" />
-
-          {/* Account Portal */}
-          <Show when="signed-out">
-            <SignInButton mode="modal">
-              <button className="flex items-center gap-2 bg-white text-black px-6 py-2.5 rounded-full text-[10px] font-bold font-body uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-black/20">
-                Login
-                <ArrowUpRight className="h-3 w-3" />
-              </button>
-            </SignInButton>
-          </Show>
-          <Show when="signed-in">
-            <div className="pr-1.5 flex items-center gap-3">
-              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Profile</span>
-              <UserButton />
-            </div>
-          </Show>
-        </div>
+      {/* Center: Menu */}
+      <div className="hidden md:flex items-center gap-10">
+        {navLinks.map((link) => (
+          <a
+            key={link.name}
+            href={link.href}
+            className="text-[12px] font-medium font-barlow text-white/50 hover:text-white transition-all uppercase tracking-widest hover:tracking-[0.2em] relative"
+          >
+            {link.name}
+          </a>
+        ))}
       </div>
 
-      {/* Right Spacer (for balance) */}
-      <div className="hidden md:block w-12" />
+      {/* Right: CTA / Account (Short) */}
+      <div className="flex items-center gap-4 pr-1">
+        {!isSignedIn ? (
+          <SignInButton mode="modal">
+            <button className="h-10 flex items-center gap-2 bg-white text-black pl-5 pr-1.5 rounded-full text-[10px] font-bold font-barlow tracking-wider hover:bg-[#eee] transition-all group/btn active:scale-95 shadow-xl shadow-black/10">
+              BOOK A FREE MEETING
+              <div className="h-7 w-7 flex items-center justify-center bg-black/5 rounded-full transition-transform group-hover/btn:rotate-45 group-hover/btn:bg-black/10">
+                <ArrowUpRight className="h-4 w-4" />
+              </div>
+            </button>
+          </SignInButton>
+        ) : (
+          <div className="flex items-center gap-3">
+             <div className="h-4 w-[1px] bg-white/10" />
+             <div className="relative group/user">
+               <div className="absolute -inset-1 bg-white rounded-full blur opacity-0 group-hover/user:opacity-20 transition duration-500"></div>
+               <UserButton 
+                 appearance={{
+                   elements: {
+                     userButtonAvatarBox: "h-8 w-8 ring-1 ring-white/20 group-hover/user:ring-white/60 transition-all shadow-2xl"
+                   }
+                 }}
+               />
+            </div>
+          </div>
+        )}
+      </div>
     </nav>
   );
 }

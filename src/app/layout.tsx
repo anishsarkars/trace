@@ -25,7 +25,8 @@ export const metadata: Metadata = {
   description: "Paste any website → get a production-ready UI prompt instantly.",
 };
 
-import { ClerkProvider, SignInButton, SignUpButton, Show, UserButton } from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
+import { Navbar } from "@/components/Navbar";
 
 export default function RootLayout({
   children,
@@ -36,6 +37,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className={`${inter.variable} ${barlow.variable} ${instrumentSerif.variable} h-full antialiased`} suppressHydrationWarning>
         <body className="min-h-full flex flex-col font-sans bg-white text-black" suppressHydrationWarning>
+          <Navbar />
           {children}
         </body>
       </html>

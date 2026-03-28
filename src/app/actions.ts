@@ -1,6 +1,20 @@
 "use server";
 
 import * as cheerio from "cheerio";
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "@/lib/prisma";
+
+export async function getUserCredits() {
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  let user = await prisma.user.findUnique({ where: { userId } });
+  if (!user) {
+    user = await prisma.user.create({ data: { userId, credits: 15, plan: "free" } });
+  }
+
+  return { credits: user.credits, plan: user.plan };
+}
 
 export async function analyzeWebsite(url: string) {
   // Add protocol if missing
